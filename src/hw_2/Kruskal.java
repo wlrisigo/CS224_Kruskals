@@ -44,8 +44,6 @@ public class Kruskal {
 
 	private int V; 
 	private int Z; 
-	//THE NODE'S ACTUAL Random Variable IS 1 - ARRAY INDEX
-	//SO IF LOOKIN FOR ACTUAL NODE GO TO ONE LESS INDEX
 	private int parentorHeight[];
 	private int count; 
 	
@@ -66,33 +64,36 @@ public class Kruskal {
 	public int getCount() {
 		return(count);
 	}
-
+//param is the index number
+//return is index of root	
 	public int find(int x){ 
 		int node = x;
 		int a = parentorHeight[x];
+		int b = parentorHeight[x];
 	        // find root and make root as parent of i (path compression) 
-		boolean isValueIndexPos = false;
+		int isValueIndexPos = 0;
 		//first check to see if it holds a positive number
-	        if (parentorHeight[node] > 0) {
+	        while(a > 0) {
 	        	//if holds a positive value and  its parent is a positive value mark x true
-	        	if(parentorHeight[parentorHeight[node]] > 0) {
-	        		isValueIndexPos = true;	
-	        	}
-	        	// go to the index value of what array is holding
-	        	//and whatever that index value is holding make it parent node
-	        	//do this until parent[node] is a negative value
-	        	parentorHeight[node] = find(parentorHeight[node]);        	
-	    }
-	        //if the index of the value was not negative add one to root(which should be negative
-	      //  System.out.println(x);
-	        if(isValueIndexPos) {
-	        	System.out.println(parentorHeight[node]);
-        		parentorHeight[node] += 1;
-        		} // Should only add if index is negative
-	        //return index when height
-        	
-	        return(node);
+	        	if(parentorHeight[a] > 0) {
+	        		isValueIndexPos++;
+	        		}    
+	        	b=a;
+	        	
+	        	a = parentorHeight[a];
+	        }
+	        //The issue was that when I was doing recurrsive it was not returning root
+	        //Now the is issue that I am returning -2 when I want the index of 
+	        a +=isValueIndexPos;
+	        //
+	        parentorHeight[x] = b;
+	        
+	        
+	        
+	       // System.out.println("this is the the value: " +  parentorHeight[x] + "==" + a);
+	        return(x);
 }
+	
 	
 	 
 	 //when making a union if x and y within same set then 
@@ -100,30 +101,40 @@ public class Kruskal {
 		 return find(x) == find(y);
 	 }
 	
-	public void unionHeight(int X, int Y) {
-		int x = find(X);
-		int y = find(Y);
-		
+	public void unionHeight(int c, int d) {
+		int root_X =c;
+		int root_Y = d;
 		//which root has a larger negative value;
-		int a = parentorHeight[x];
-		int b = parentorHeight[y];
+		int height_X = parentorHeight[root_X];
+			if(height_X>=0) {
+				height_X =parentorHeight[height_X];
+			}
+		int height_Y = parentorHeight[root_Y];
+			if(height_Y>=0) {
+				height_Y =parentorHeight[height_Y];
+			}
 		
-		if(parentorHeight[x] < parentorHeight[y]) {
-			//have root of y point to x
-			parentorHeight[y] = x;
+		if(height_X < height_Y) {
+			//have root of root_Y point to root_X
+			parentorHeight[root_Y] = root_X;
 		}
-		else if(parentorHeight[x] > parentorHeight[y]) {
-			parentorHeight[x] = y;
+		else if(height_X > height_Y) {
+			parentorHeight[root_X] = root_Y;
 		}
-		else if(X<Y) {
-			if(parentorHeight[y]<0)
-				parentorHeight[x]= parentorHeight[x] - 1*(1); 
-			//have root of y point to x
-			parentorHeight[y] = x;
+		else if(root_X<root_Y) {
+			if(parentorHeight[root_Y]<0) {
+				//its pointing to root so root does not change
+				parentorHeight[root_X]= parentorHeight[root_X] - 1*(1); 
+			}
+			//have root of root_Y point to root root_X
+			parentorHeight[root_Y] = root_X;
 		}else{
-			parentorHeight[y]= parentorHeight[y] - 1*(1); 
-			//have root of x point to y
-			parentorHeight[x] = y;
+			if(parentorHeight[root_X]<0) {
+				//its pointing to root so root does not change
+				parentorHeight[root_Y]= parentorHeight[root_Y] - 1*(1); 
+			}
+			//have root of root_X point to root_Y
+			parentorHeight[root_X] = root_Y;
 		}
 		count--;
 	}
@@ -224,9 +235,7 @@ public class Kruskal {
 	    	graph[14].setDst(5-1);
 	    	
 	    	
-	    	for (int i = 0; i < graph.length; i++) {
-				System.out.print(graph[i].getWeight() + ", ");
-			}
+	    
 	    	return graph;
 	    }
 	    
@@ -236,11 +245,6 @@ public class Kruskal {
 	    	Edge finished[]= makeGraph();
 	    	System.out.println();
 	    	finished = mergesort(finished);
-	    	System.out.println();
-	    	for (int i = 0; i < finished.length; i++) {
-				System.out.print(finished[i].getWeight() + ", ");
-			}
-	    	System.out.println();
 	    	while(e< V-1) {
 	    		Edge next_edge = new Edge();
 	    		next_edge = finished[v++];
@@ -249,26 +253,48 @@ public class Kruskal {
 	    		int x = find(next_edge.getSrc());
 	    		int y = find(next_edge.getDst()); 
 	    		//check this logic
+	    		
+	    		
+	    		//could be a direct parent
+	    		
 	    		int a = parentorHeight[x];
+	    		if(parentorHeight[x] <0) {
+
+	    			a = x;
+
+	    		}
+	    		else if(parentorHeight[a]>= 0 ) {
+	    			a = parentorHeight[a];
+	    		}
+
+	    		
+	   
 	    		int b = parentorHeight[y];
+	    		if(parentorHeight[y] <0) {
+
+	    			b = y;
+
+	    		}
+	    		else if(parentorHeight[b]>= 0 ) {
+	    			b = parentorHeight[b];
+	    		}
+
 	    		
-	    		if(parentorHeight[x] < 0 &&  parentorHeight[y] == parentorHeight[x]) {
+
+	    		if(a >= 0 && b >= 0 && b!=a) {
 	    			unionHeight(x,y); 
 	    			e++;
-	    			System.out.println(x + " - " + y);			
-	    		}
-	    		else if(parentorHeight[x] != parentorHeight[y]) {
-	    			unionHeight(x,y); 
-	    			e++;
-	    			System.out.println(x + " - " + y);
-	    		}
-	    		
+	    			System.out.println(x + " - " + y + " ----" + next_edge.getWeight());			
+	    		}	    		
 	    	}
-	    	System.out.println();
+	    	
+	    	
 	    	for (int i = 0; i < parentorHeight.length; i++) {
-	    		System.out.print(parentorHeight[i] + ", ");
-			}
+	    	
+	    		System.out.print(parentorHeight[i]  + ", ");
+	    		}
 	    }
+	    	
 	    	
 	    
 	    
